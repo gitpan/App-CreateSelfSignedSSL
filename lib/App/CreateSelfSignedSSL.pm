@@ -1,6 +1,111 @@
 package App::CreateSelfSignedSSL;
 
-our $VERSION = '0.01'; # VERSION
+use 5.010001;
+use strict;
+use warnings;
+use Log::Any '$log';
+
+use Expect;
+#use File::chdir;
+#use File::Temp;
+use Log::Any::For::Builtins qw(system);
+use SHARYANTO::Proc::ChildError qw(explain_child_error);
+use String::ShellQuote;
+
+sub _sq { shell_quote($_[0]) }
+
+our $VERSION = '0.02'; # VERSION
+
+our %SPEC;
+
+$SPEC{create_self_signed_ssl_cert} = {
+    v => 1.1,
+    args => {
+        hostname => {
+            schema => ['str*' => match => qr/\A\w+(\.\w+)*\z/],
+            req => 1,
+            pos => 0,
+        },
+        ca => {
+            summary => 'path to CA cert file',
+            schema => ['str*'],
+        },
+        ca_key => {
+            summary => 'path to CA key file',
+            schema => ['str*'],
+        },
+        interactive => {
+            schema => [bool => default => 0],
+            cmdline_aliases => {
+                i => {},
+            },
+        },
+        wildcard => {
+            schema => [bool => default => 0],
+            summary => 'If set to 1 then Common Name is set to *.hostname',
+            description => 'Only when non-interactive',
+        },
+    },
+    deps => {
+        exec => 'openssl',
+    },
+};
+sub create_self_signed_ssl_cert {
+    my %args = @_;
+
+    my $h = $args{hostname};
+
+    system("openssl genrsa 2048 > "._sq("$h.key"));
+    return [500, "Can't generate key: ".explain_child_error()] if $?;
+
+    my $cmd = "openssl req -new -key "._sq("$h.key")." -out "._sq("$h.csr");
+    if ($args{interactive}) {
+        system $cmd;
+        return [500, "Can't generate csr: ".explain_child_error()] if $?;
+    } else {
+        my $exp = Expect->spawn($cmd);
+        return [500, "Can't spawn openssl req"] unless $exp;
+        $exp->expect(
+            30,
+            [ qr!^.+\[[^\]]*\]:!m ,=> sub {
+                  my $exp = shift;
+                  my $prompt = $exp->exp_match;
+                  if ($prompt =~ /common name/i) {
+                      $exp->send("$h\n");
+                  } else {
+                      $exp->send("\n");
+                  }
+                  exp_continue;
+              } ],
+        );
+        $exp->soft_close;
+    }
+
+    # we can provide options later, but for now let's
+    system(join(
+        "",
+        "openssl x509 -req -days 3650 -in ", _sq("$h.csr"),
+        " -signkey ", _sq("$h.key"),
+        ($args{ca} ? " -CA "._sq($args{ca}) : ""),
+        ($args{ca_key} ? " -CAkey "._sq($args{ca_key}) : ""),
+        ($args{ca} ? " -CAcreateserial" : ""),
+        " -out ", _sq("$h.crt"),
+    ));
+    return [500, "Can't generate crt: ".explain_child_error()] if $?;
+
+    system("openssl x509 -noout -fingerprint -text < "._sq("$h.crt").
+               "> "._sq("$h.info"));
+    return [500, "Can't generate info: ".explain_child_error()] if $?;
+
+    system("cat "._sq("$h.crt")." "._sq("$h.key")." > "._sq("$h.pem"));
+    return [500, "Can't generate pem: ".explain_child_error()] if $?;
+
+    system("chmod 400 "._sq("$h.pem"));
+
+    $log->info("Your certificate has been created at $h.pem");
+
+    [200];
+}
 
 1;
 # ABSTRACT: Create self-signed SSL certificate
@@ -17,13 +122,52 @@ App::CreateSelfSignedSSL - Create self-signed SSL certificate
 
 =head1 VERSION
 
-version 0.01
+version 0.02
 
 =head1 SYNOPSIS
 
 This distribution provides command-line utility called
 L<create-self-signed-ssl-cert>.
 
+=head1 FUNCTIONS
+
+
+=head2 create_self_signed_ssl_cert(%args) -> [status, msg, result, meta]
+
+Arguments ('*' denotes required arguments):
+
+=over 4
+
+=item * B<ca> => I<str>
+
+path to CA cert file.
+
+=item * B<ca_key> => I<str>
+
+path to CA key file.
+
+=item * B<hostname>* => I<str>
+
+=item * B<interactive> => I<bool> (default: 0)
+
+=item * B<wildcard> => I<bool> (default: 0)
+
+If set to 1 then Common Name is set to *.hostname.
+
+Only when non-interactive
+
+=back
+
+Return value:
+
+Returns an enveloped result (an array).
+
+First element (status) is an integer containing HTTP status code
+(200 means OK, 4xx caller error, 5xx function error). Second element
+(msg) is a string containing error message, or 'OK' if status is
+200. Third element (result) is optional, the actual result. Fourth
+element (meta) is called result metadata and is optional, a hash
+that contains extra information.
 =head1 HOMEPAGE
 
 Please visit the project's homepage at L<https://metacpan.org/release/App-CreateSelfSignedSSL>.

@@ -30,8 +30,7 @@
       "runtime" : {
          "requires" : {
             "Expect" : "0",
-            "File::chdir" : "0",
-            "Log::Any::App" : "0",
+            "Log::Any" : "0",
             "Log::Any::For::Builtins" : "0",
             "Perinci::CmdLine" : "0",
             "SHARYANTO::Proc::ChildError" : "0",
@@ -60,7 +59,7 @@
          "web" : "https://github.com/sharyanto/perl-App-CreateSelfSignedSSL"
       }
    },
-   "version" : "0.01",
+   "version" : "0.02",
    "x_Dist_Zilla" : {
       "perl" : {
          "version" : "5.018002"
