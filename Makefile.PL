@@ -18,6 +18,7 @@ my %WriteMakefileArgs = (
   },
   "DISTNAME" => "App-CreateSelfSignedSSL",
   "EXE_FILES" => [
+    "bin/create-ssl-csr",
     "bin/create-self-signed-ssl-cert"
   ],
   "LICENSE" => "perl",
@@ -27,7 +28,7 @@ my %WriteMakefileArgs = (
     "Log::Any" => 0,
     "Log::Any::For::Builtins" => 0,
     "Perinci::CmdLine" => 0,
-    "SHARYANTO::Proc::ChildError" => 0,
+    "Proc::ChildError" => 0,
     "String::ShellQuote" => 0
   },
   "TEST_REQUIRES" => {
@@ -36,7 +37,7 @@ my %WriteMakefileArgs = (
     "IPC::Open3" => 0,
     "Test::More" => 0
   },
-  "VERSION" => "0.02",
+  "VERSION" => "0.03",
   "test" => {
     "TESTS" => "t/*.t"
   }
@@ -51,7 +52,7 @@ my %FallbackPrereqs = (
   "Log::Any" => 0,
   "Log::Any::For::Builtins" => 0,
   "Perinci::CmdLine" => 0,
-  "SHARYANTO::Proc::ChildError" => 0,
+  "Proc::ChildError" => 0,
   "String::ShellQuote" => 0,
   "Test::More" => 0
 );

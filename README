@@ -2,11 +2,12 @@ NAME
     App::CreateSelfSignedSSL - Create self-signed SSL certificate
 
 VERSION
-    version 0.02
+    This document describes version 0.03 of App::CreateSelfSignedSSL (from
+    Perl distribution App-CreateSelfSignedSSL), released on 2014-05-22.
 
 SYNOPSIS
     This distribution provides command-line utility called
-    create-self-signed-ssl-cert.
+    create-self-signed-ssl-cert and create-ssl-csr.
 
 FUNCTIONS
   create_self_signed_ssl_cert(%args) -> [status, msg, result, meta]
@@ -19,6 +20,12 @@ FUNCTIONS
     *   ca_key => *str*
 
         path to CA key file.
+
+    *   csr_only => *bool* (default: 0)
+
+        If set to 1 then will only generate .csr file.
+
+        Can be useful if want to create .csr and submit it to a CA.
 
     *   hostname* => *str*
 
@@ -39,8 +46,33 @@ FUNCTIONS
     a string containing error message, or 'OK' if status is 200. Third
     element (result) is optional, the actual result. Fourth element (meta)
     is called result metadata and is optional, a hash that contains extra
-    information. =head1 HOMEPAGE
+    information.
 
+  create_ssl_csr(%args) -> [status, msg, result, meta]
+    Arguments ('*' denotes required arguments):
+
+    *   hostname* => *str*
+
+    *   interactive => *bool* (default: 0)
+
+    *   wildcard => *bool* (default: 0)
+
+        If set to 1 then Common Name is set to *.hostname.
+
+        Only when non-interactive
+
+    Return value:
+
+    Returns an enveloped result (an array).
+
+    First element (status) is an integer containing HTTP status code (200
+    means OK, 4xx caller error, 5xx function error). Second element (msg) is
+    a string containing error message, or 'OK' if status is 200. Third
+    element (result) is optional, the actual result. Fourth element (meta)
+    is called result metadata and is optional, a hash that contains extra
+    information.
+
+HOMEPAGE
     Please visit the project's homepage at
     <https://metacpan.org/release/App-CreateSelfSignedSSL>.
 

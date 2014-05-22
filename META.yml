@@ -21,14 +21,14 @@ requires:
   Log::Any: '0'
   Log::Any::For::Builtins: '0'
   Perinci::CmdLine: '0'
-  SHARYANTO::Proc::ChildError: '0'
+  Proc::ChildError: '0'
   String::ShellQuote: '0'
   perl: '5.010001'
 resources:
   bugtracker: https://rt.cpan.org/Public/Dist/Display.html?Name=App-CreateSelfSignedSSL
   homepage: https://metacpan.org/release/App-CreateSelfSignedSSL
   repository: git://github.com/sharyanto/perl-App-CreateSelfSignedSSL.git
-version: '0.02'
+version: '0.03'
 x_Dist_Zilla:
   perl:
     version: '5.018002'
@@ -110,9 +110,9 @@ x_Dist_Zilla:
       name: '@Author::SHARYANTO/MetaConfig'
       version: '5.013'
     -
-      class: Dist::Zilla::Plugin::OurPkgVersion
-      name: '@Author::SHARYANTO/OurPkgVersion'
-      version: '0.005001'
+      class: Dist::Zilla::Plugin::OurDate
+      name: '@Author::SHARYANTO/OurDate'
+      version: '0.01'
     -
       class: Dist::Zilla::Plugin::PodWeaver
       config:
@@ -168,7 +168,7 @@ x_Dist_Zilla:
             -
               class: Pod::Weaver::Plugin::Perinci
               name: '@Author::SHARYANTO/Perinci'
-              version: '0.14'
+              version: '0.15'
             -
               class: Pod::Weaver::Section::Leftovers
               name: '@Author::SHARYANTO/Leftovers'
@@ -208,13 +208,21 @@ x_Dist_Zilla:
       name: '@Author::SHARYANTO/PodWeaver'
       version: '4.005'
     -
+      class: Dist::Zilla::Plugin::PruneFiles
+      name: '@Author::SHARYANTO/PruneFiles'
+      version: '5.013'
+    -
       class: Dist::Zilla::Plugin::ReadmeFromPod
       name: '@Author::SHARYANTO/ReadmeFromPod'
       version: '0.21'
     -
       class: Dist::Zilla::Plugin::Rinci::Validate
       name: '@Author::SHARYANTO/Rinci::Validate'
-      version: '0.12'
+      version: '0.13'
+    -
+      class: Dist::Zilla::Plugin::SHARYANTO::OurPkgVersion
+      name: '@Author::SHARYANTO/SHARYANTO::OurPkgVersion'
+      version: '0.02'
     -
       class: Dist::Zilla::Plugin::Test::Compile
       config:
@@ -230,14 +238,6 @@ x_Dist_Zilla:
       class: Dist::Zilla::Plugin::Test::Rinci
       name: '@Author::SHARYANTO/Test::Rinci'
       version: '0.01'
-    -
-      class: Dist::Zilla::Plugin::Run::BeforeBuild
-      name: '@Author::SHARYANTO/Run::BeforeBuild'
-      version: '0.020'
-    -
-      class: Dist::Zilla::Plugin::Run::Release
-      name: '@Author::SHARYANTO/Run::Release'
-      version: '0.020'
     -
       class: Dist::Zilla::Plugin::Prereqs
       config:

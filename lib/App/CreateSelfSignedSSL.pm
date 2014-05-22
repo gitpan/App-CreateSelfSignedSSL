@@ -9,12 +9,12 @@ use Expect;
 #use File::chdir;
 #use File::Temp;
 use Log::Any::For::Builtins qw(system);
-use SHARYANTO::Proc::ChildError qw(explain_child_error);
+use Proc::ChildError qw(explain_child_error);
 use String::ShellQuote;
 
 sub _sq { shell_quote($_[0]) }
 
-our $VERSION = '0.02'; # VERSION
+our $VERSION = '0.03'; # VERSION
 
 our %SPEC;
 
@@ -45,6 +45,15 @@ $SPEC{create_self_signed_ssl_cert} = {
             summary => 'If set to 1 then Common Name is set to *.hostname',
             description => 'Only when non-interactive',
         },
+        csr_only => {
+            schema => [bool => default => 0],
+            summary => 'If set to 1 then will only generate .csr file',
+            description => <<'_',
+
+Can be useful if want to create .csr and submit it to a CA.
+
+_
+        },
     },
     deps => {
         exec => 'openssl',
@@ -71,7 +80,7 @@ sub create_self_signed_ssl_cert {
                   my $exp = shift;
                   my $prompt = $exp->exp_match;
                   if ($prompt =~ /common name/i) {
-                      $exp->send("$h\n");
+                      $exp->send(($args{wildcard} ? "*." : "") . "$h\n");
                   } else {
                       $exp->send("\n");
                   }
@@ -79,6 +88,10 @@ sub create_self_signed_ssl_cert {
               } ],
         );
         $exp->soft_close;
+    }
+    if ($args{csr_only}) {
+        $log->info("Your CSR has been created at $h.csr");
+        return [200];
     }
 
     # we can provide options later, but for now let's
@@ -107,6 +120,37 @@ sub create_self_signed_ssl_cert {
     [200];
 }
 
+$SPEC{create_ssl_csr} = {
+    v => 1.1,
+    args => {
+        hostname => {
+            schema => ['str*' => match => qr/\A\w+(\.\w+)*\z/],
+            req => 1,
+            pos => 0,
+        },
+        interactive => {
+            schema => [bool => default => 0],
+            cmdline_aliases => {
+                i => {},
+            },
+        },
+        wildcard => {
+            schema => [bool => default => 0],
+            summary => 'If set to 1 then Common Name is set to *.hostname',
+            description => 'Only when non-interactive',
+        },
+    },
+    deps => {
+        # XXX should've depended on create_self_signed_ssl_cert() func instead,
+        # and dependencies should be checked recursively.
+        exec => 'openssl',
+    },
+};
+sub create_ssl_csr {
+    my %args = @_;
+    create_self_signed_ssl_cert(%args, csr_only=>1);
+}
+
 1;
 # ABSTRACT: Create self-signed SSL certificate
 
@@ -122,12 +166,12 @@ App::CreateSelfSignedSSL - Create self-signed SSL certificate
 
 =head1 VERSION
 
-version 0.02
+This document describes version 0.03 of App::CreateSelfSignedSSL (from Perl distribution App-CreateSelfSignedSSL), released on 2014-05-22.
 
 =head1 SYNOPSIS
 
 This distribution provides command-line utility called
-L<create-self-signed-ssl-cert>.
+L<create-self-signed-ssl-cert> and L<create-ssl-csr>.
 
 =head1 FUNCTIONS
 
@@ -145,6 +189,12 @@ path to CA cert file.
 =item * B<ca_key> => I<str>
 
 path to CA key file.
+
+=item * B<csr_only> => I<bool> (default: 0)
+
+If set to 1 then will only generate .csr file.
+
+Can be useful if want to create .csr and submit it to a CA.
 
 =item * B<hostname>* => I<str>
 
@@ -168,6 +218,37 @@ First element (status) is an integer containing HTTP status code
 200. Third element (result) is optional, the actual result. Fourth
 element (meta) is called result metadata and is optional, a hash
 that contains extra information.
+
+
+=head2 create_ssl_csr(%args) -> [status, msg, result, meta]
+
+Arguments ('*' denotes required arguments):
+
+=over 4
+
+=item * B<hostname>* => I<str>
+
+=item * B<interactive> => I<bool> (default: 0)
+
+=item * B<wildcard> => I<bool> (default: 0)
+
+If set to 1 then Common Name is set to *.hostname.
+
+Only when non-interactive
+
+=back
+
+Return value:
+
+Returns an enveloped result (an array).
+
+First element (status) is an integer containing HTTP status code
+(200 means OK, 4xx caller error, 5xx function error). Second element
+(msg) is a string containing error message, or 'OK' if status is
+200. Third element (result) is optional, the actual result. Fourth
+element (meta) is called result metadata and is optional, a hash
+that contains extra information.
+
 =head1 HOMEPAGE
 
 Please visit the project's homepage at L<https://metacpan.org/release/App-CreateSelfSignedSSL>.

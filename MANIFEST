@@ -2,12 +2,12 @@
 Changes
 LICENSE
 MANIFEST
-MANIFEST.SKIP
 META.json
 META.yml
 Makefile.PL
 README
 bin/create-self-signed-ssl-cert
+bin/create-ssl-csr
 dist.ini
 lib/App/CreateSelfSignedSSL.pm
 t/00-compile.t
